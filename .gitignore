@@ -1,5 +1,6 @@
 .lein-failures
 target/
 *.iml
+.idea/
 .nrepl-port
 .lein-repl-history
