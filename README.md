@@ -131,11 +131,11 @@ Another example might be mocking a storage service for testing:
 
 (defn upsert
   [type document]
-  (services/call :upsert type document))
+  (services/call :store :upsert type document))
   
 (defn retrieve
   [type key]
-  (services/call :retrieve type key))
+  (services/call :store :retrieve type key))
 ```
 
 And in the test initialization:
@@ -148,7 +148,10 @@ And in the test initialization:
 (store/set-store-namespace! "foo.bar.model.store.db.mem")
 
 (deftest simple-persist-and-aggregate
-  ;; test pa persist to mem db and aggregation in mem db without external dep
+  ;; test pa agent with mem db and aggregation in mem db without external dep
+  ;; the pa agent uses the foo.bar.model.store facade namespace to store
+  ;; and manipulate data/documents so no code changes are required in the
+  ;; pa agent to swap out the backend storage for testing
   )
 ```  
 
@@ -235,55 +238,54 @@ And in the test initialization:
 ```clojure
 user=> (require '[clj-service-locator.core :as services])
 nil
-user=> (require '[clj-service-locator.demo.dispatcher :as dispatcher])
+user=> (require '[clj-service-locator.demo.dispatcher :as facade])
 nil
 user=> (services/mapping :dispatcher)
 {:ns "clj-service-locator.demo.human", 
  :func-names [:greet :scientific-name], 
  :funcs {:scientific-name #'clj-service-locator.demo.human/scientific-name, 
          :greet #'clj-service-locator.demo.human/greet}}
-user=> (dispatcher/greet)
+user=> (facade/greet)
 "Hi."
-user=> (dispatcher/greet "Abdul")
+user=> (facade/greet "Abdul")
 "Hi, Abdul."
-user=> (dispatcher/scientific-name)
+user=> (facade/scientific-name)
 "Homo sapien"
-user=> (dispatcher/set-namespace! "clj-service-locator.demo.dog")
+user=> (facade/set-namespace! "clj-service-locator.demo.dog")
 {:ns "clj-service-locator.demo.dog", 
  :func-names [:greet :scientific-name], 
  :funcs {:scientific-name #'clj-service-locator.demo.dog/scientific-name, 
          :greet #'clj-service-locator.demo.dog/greet}}
-user=> (dispatcher/greet)
-user=> (dispatcher/greet)
+user=> (facade/greet)
 "Arf."
-user=> (dispatcher/greet "Abdul")
+user=> (facade/greet "Abdul")
 "Arf, Abdul."
-user=> (dispatcher/scientific-name)
+user=> (facade/scientific-name)
 "Canis lupus familiaris"
-user=> (dispatcher/set-namespace! "clj-service-locator.demo.cat") ;; this will fail
+user=> (facade/set-namespace! "clj-service-locator.demo.cat") ;; this will fail
 RuntimeException Aborted service namespace assignment to 'clj-service-locator.demo.cat' 
 with required functions [greet, scientific-name] due to missing function definitions 
 [scientific-name].  clj-service-locator.core/service-ns-map (core.clj:53)
-user=> (dispatcher/set-namespace! "clj-service-locator.demo.cat" true) ;; added force? to true to force namespace even if missing functions
+user=> (facade/set-namespace! "clj-service-locator.demo.cat" true) ;; added force? to true to force namespace even if missing functions
 {:ns "clj-service-locator.demo.cat", 
  :func-names [:greet :scientific-name], 
  :funcs {:scientific-name #'clj-service-locator.demo.cat/scientific-name, 
          :greet #'clj-service-locator.demo.cat/greet}}
-user=> (dispatcher/greet)
+user=> (facade/greet)
 "Meow."
-user=> (dispatcher/greet "Abdul")
+user=> (facade/greet "Abdul")
 "Meow, Abdul."
-user=> (dispatcher/scientific-name)
+user=> (facade/scientific-name)
 RuntimeException Exception in :dispatcher service call occurred due to 
 no function 'scientific-name' definition in namespace 
 'clj-service-locator.demo.cat' (clj-service-locator.demo.cat/scientific-name) 
 with no arguments.  clj-service-locator.core/call (core.clj:91)
-user=> (dispatcher/set-namespace! "clj-service-locator.demo.human")
+user=> (facade/set-namespace! "clj-service-locator.demo.human")
 {:ns "clj-service-locator.demo.human", 
  :func-names [:greet :scientific-name], 
  :funcs {:scientific-name #'clj-service-locator.demo.human/scientific-name, 
          :greet #'clj-service-locator.demo.human/greet}}
-user=> (dispatcher/greet)
+user=> (facade/greet)
 "Hi."
 ```
 
