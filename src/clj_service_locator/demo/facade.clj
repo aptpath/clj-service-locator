@@ -1,7 +1,7 @@
-(ns clj-service-locator.demo.dispatcher
+(ns clj-service-locator.demo.facade
   (:require [clj-service-locator.core :as services]))
 
-(def ^{:private true} service-key :dispatcher)
+(def ^{:private true} service-key :facade)
 (def ^{:private true} service-default-ns "clj-service-locator.demo.human")
 (def ^{:private true} service-func-names [:greet :scientific-name])
 
