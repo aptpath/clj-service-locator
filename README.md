@@ -12,7 +12,8 @@ and functionality without the need to change calling code.
 
 Although the Service Locator design pattern might be considered only an 
 object-oriented (OO) pattern, the pattern is implementated functionally 
-in `clj-service-locator`.
+in `clj-service-locator` via mapping of a namespace containing service
+functions using service keys.
 
 The `clj-service-locator` library provides a light-weight, simple, and 
 powerful mechanism for Service Locator (registry).
@@ -115,6 +116,41 @@ backed by a service locator namespace (clj-service-locator.core) provides
 decoupling of the calling functions from the implementation of the
 service function(s), allowing the service namespaces to be swapped as
 necessary, even at runtime.
+
+Another example might be mocking a storage service for testing:
+
+```clojure
+(ns foo.bar.model.store
+  (:require [clj-service-locator :as services]))
+
+(services/register-namespace! :store "foo.bar.model.store.db.mongo" [:retrieve :upsert])
+
+(defn set-store-namespace! 
+  [service-ns]
+  (services/set-namespace! :store service-ns)
+
+(defn upsert
+  [type document]
+  (services/call :upsert type document))
+  
+(defn retrieve
+  [type key]
+  (services/call :retrieve type key))
+```
+
+And in the test initialization:
+
+```clojure
+(ns foo.bar.model.store.aggregation-test
+  (:require [foo.bar.model.store :as store]
+            [foo.bar.agent.pa :as pa]))
+
+(store/set-store-namespace! "foo.bar.model.store.db.mem")
+
+(deftest simple-persist-and-aggregate
+  ;; test pa persist to mem db and aggregation in mem db without external dep
+  )
+```  
 
 ### Developer Notes
 * library renamed to `clj-service-locator` from `clj-ioc` to be more accurate
@@ -368,6 +404,7 @@ nil
 
 ### Links
 * [Service Locator](http://en.wikipedia.org/wiki/Service_locator_pattern) 
+* [Facade design pattern](http://en.wikipedia.org/wiki/Facade_pattern) 
 
 ## License
 
