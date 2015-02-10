@@ -60,8 +60,9 @@ implement the
 via dispatcher namespaces that provide an abstraction layer between 
 calling code and the Service Locator and execution of functions.
 
-For example, if you would like to abstract the logging mechanism from the domain logic / application code, then you
-would create a Facade namespace `(ns foo.bar.service.logger ...)` as follows:
+For example, if you would like to abstract the logging mechanism from the 
+domain logic / application code, then you would create a Facade namespace 
+`(ns foo.bar.service.logger ...)` as follows:
 
 ```clojure
 (ns foo.bar.service.logger
@@ -89,7 +90,7 @@ would create a Facade namespace `(ns foo.bar.service.logger ...)` as follows:
 (defn fatal [m & [x]] (services/call service-key :fatal m x)))
 ```
 
-And the calls from application namespaces:
+And the calls from application namespaces to the logging facade namespace:
 
 ```clojure
 (ns foo.bar.alpha
@@ -108,10 +109,15 @@ And the calls from application namespaces:
   [a b c] 
   (log/warn (str "inside foo.bar.beta/process with a: " a ";b: " b ";c: " c)))
 ```
-:todo : finish examples
+
+The abstraction of services into a facade namespace (foo.bar.service.logger) 
+backed by a service locator namespace (clj-service-locator.core) provides
+decoupling of the calling functions from the implementation of the
+service function(s), allowing the service namespaces to be swapped as
+necessary, even at runtime.
 
 ### Developer Notes
-* library renamed to `clj-service-locator` from `clj-ioc` 
+* library renamed to `clj-service-locator` from `clj-ioc` to be more accurate
 * some function and demo names were changed between 0.1.6 and 0.2.0 to be more consistent and concise
 
 ### Demo Namespaces / Examples
