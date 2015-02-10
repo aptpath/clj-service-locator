@@ -40,29 +40,27 @@
 (defn service-ns-map
   "Creates a service namespace map with resolved functions given 
   function names and service namespace.  Throws an exception if missing 
-  a function AND the force? parameter is set to false?"
-  ([service-ns service-func-names] (service-ns-map service-ns service-func-names false))
-  ([service-ns service-func-names force?]
-   (let [fm {}
-         res (reduce #(assoc % %2 (resolve-func service-ns %2))
-                     {}
-                     service-func-names)
-         missing-funcs (nil-map-values res)
-         mfs (into [] missing-funcs)]
-     (if-not (empty? missing-funcs)
-       (if force?
-         {:ns (kws service-ns)
-          :func-names service-func-names
-          :funcs res
-          :resolved-funcs (vec- service-func-names mfs)
-          :missing-funcs mfs}
-         (throw (RuntimeException. (str "Aborted service namespace assignment to '" (kws service-ns)
-                                        "' with required function(s) [" (nice-list service-func-names) "] due to missing function definition(s) ["
-                                        (nice-list mfs) "]."))))
-       {:ns (kws service-ns)
-        :func-names service-func-names
-        :resolved-funcs service-func-names
-        :funcs res}))))
+  a function AND the force? parameter is missing, nil, or set to false."
+  [service-ns service-func-names & [force?]]
+  (let [res (reduce #(assoc % %2 (resolve-func service-ns %2))
+                    {}
+                    service-func-names)
+        missing-funcs (nil-map-values res)
+        mfs (into [] missing-funcs)]
+    (if-not (empty? missing-funcs)
+      (if force?
+        {:ns (kws service-ns)
+         :func-names service-func-names
+         :funcs res
+         :resolved-funcs (vec- service-func-names mfs)
+         :missing-funcs mfs}
+        (throw (RuntimeException. (str "Aborted service namespace assignment to '" (kws service-ns)
+                                       "' with required function(s) [" (nice-list service-func-names) "] due to missing function definition(s) ["
+                                       (nice-list mfs) "]."))))
+      {:ns (kws service-ns)
+       :func-names service-func-names
+       :resolved-funcs service-func-names
+       :funcs res})))
 
 (defn mappings
   "Returns the current service-namespaces map."
@@ -90,16 +88,15 @@
      :func-names - vector of function names
      :resolved-funcs - vector of resolved (successful) function names
      :missing-funcs - vector of missing function names."
-  ([] (get-missing-funcs nil))
-  ([service-key]
-   (if service-key
-     (if (:missing-funcs (@service-namespaces service-key))
-       (dissoc (@service-namespaces service-key) :funcs))
-     (reduce #(if (:missing-funcs (@service-namespaces %2))
-                (assoc % %2 (dissoc (@service-namespaces %2) :funcs))
-                %)
-             nil
-             (keys @service-namespaces)))))
+  [& [service-key]]
+  (if service-key
+    (if (:missing-funcs (@service-namespaces service-key))
+      (dissoc (@service-namespaces service-key) :funcs))
+    (reduce #(if (:missing-funcs (@service-namespaces %2))
+              (assoc % %2 (dissoc (@service-namespaces %2) :funcs))
+              %)
+            nil
+            (keys @service-namespaces))))
 
 (defn all-missing-functions
   "Returns all service namespaces as maps with servy keys as keys and list of missing function names.
@@ -137,10 +134,9 @@
     ;; register service mapping for service-key :storage and namespace :prj-name.store.mongo with service function names [:create :retrieve :update :delete]
     ;; and do not force? (false) to register if there are any functions in the function names list [:create :retrieve :update :delete] not resolvable
     ;; in the given namespace (:prj-name.store.mongo)."
-  ([service-key service-seed-ns service-func-names] (register-namespace! service-key service-seed-ns service-func-names false))
-  ([service-key service-seed-ns service-func-names force?]
-   (let [res (service-ns-map service-seed-ns service-func-names force?)]
-     (swap! service-namespaces assoc service-key res))))
+  [service-key service-seed-ns service-func-names & [force?]]
+  (let [res (service-ns-map service-seed-ns service-func-names force?)]
+    (swap! service-namespaces assoc service-key res)))
 
 (defn unregister-namespace!
   "Unregisters service namespace given the service key :service-key."
@@ -150,13 +146,12 @@
 (defn set-namespace!
   "Sets a service namespace given an existing :service-key, :service-seed-ns string namespace, :service-func-names list of function names as keywords, and
    optional :force? boolean (defaults to false) which will thrown an exception if one function is not defined in the namespace."
-  ([service-key service-ns] (set-namespace! service-key service-ns false))
-  ([service-key service-ns force?]
-   (let [sns (@service-namespaces service-key)]
-     (if sns
-       (do
-         (swap! service-namespaces assoc service-key (service-ns-map service-ns (:func-names sns) force?))
-         (service-key @service-namespaces))))))
+  [service-key service-ns & [force?]]
+  (let [sns (@service-namespaces service-key)]
+    (if sns
+      (do
+        (swap! service-namespaces assoc service-key (service-ns-map service-ns (:func-names sns) force?))
+        (service-key @service-namespaces)))))
 
 (defn get-namespace
   "Returns the mapped namespace of the service-key parameter, nil if no mapping

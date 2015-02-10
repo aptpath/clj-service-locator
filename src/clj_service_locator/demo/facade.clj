@@ -10,9 +10,8 @@
 
 (defn set-namespace!
   "Sets the namespace via the string :service-ns with the optional :force? argument to force setting even if not all functions are resolvable."
-  ([service-ns] (set-namespace! service-ns false))
-  ([service-ns force?]
-   (services/set-namespace! service-key service-ns force?)))
+  [service-ns & [force?]]
+  (services/set-namespace! service-key service-ns force?))
 
 (defn hello
   "Function to show different function name is able to call an service function."
