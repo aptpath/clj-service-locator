@@ -15,15 +15,13 @@
 
 (defn hello
   "Function to show different function name is able to call an service function."
-  ([] (hello nil))
-  ([n]
-   (services/call service-key :greet n)))
+  [& [n]]
+  (services/call service-key :greet n))
 
 (defn greet
   "Function stub for calling :greet in the :dispatcher service mapping."
-  ([] (greet nil))
-  ([n]
-   (services/call service-key :greet n)))
+  [& [n]]
+  (services/call service-key :greet n))
 
 (defn scientific-name
   "Function stub for calling :scientific-name in the :dispatcher service  mapping."
